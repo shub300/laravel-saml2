@@ -5,6 +5,7 @@ namespace Aacotroneo\Saml2;
 use OneLogin\Saml2\Auth as OneLogin_Saml2_Auth;
 use OneLogin\Saml2\Error as OneLogin_Saml2_Error;
 use Aacotroneo\Saml2\Events\Saml2LogoutEvent;
+use App\Http\Controllers\AuthenticationMethodController;
 
 use Log;
 use Psr\Log\InvalidArgumentException;
@@ -36,15 +37,12 @@ class Saml2Auth
      */
     public static function loadOneLoginAuthFromIpdConfig($idpName)
     {
+        $common_idp = 'integratom'; // Integrato Market Place
         if (empty($idpName)) {
             throw new \InvalidArgumentException("IDP name required.");
         }
 
-        $config = config('saml2.'.$idpName.'_idp_settings');
-
-        if (is_null($config)) {
-            throw new \InvalidArgumentException('"' . $idpName . '" is not a valid IdP.');
-        }
+        $config = config('saml2.'.$common_idp.'_idp_settings');
 
         if (empty($config['sp']['entityId'])) {
             $config['sp']['entityId'] = URL::route('saml2_metadata', $idpName);
@@ -66,7 +64,14 @@ class Saml2Auth
             $config['idp']['x509cert'] = static::extractCertFromFile($config['idp']['x509cert']);
         }
 
-        return new OneLogin_Saml2_Auth($config);
+        $resp = app('App\Http\Controllers\AuthenticationMethodController')->getSamlConfig($config,$idpName);
+
+        if($resp['status_code']=='0'){
+            echo $resp['response'];exit;
+        }else{
+            $config = $resp['response'];
+            return new OneLogin_Saml2_Auth($config);
+        }
     }
 
     /**
@@ -224,7 +229,7 @@ class Saml2Auth
         return $this->auth->getLastErrorReason();
     }
 
-    
+
     protected static function extractPkeyFromFile($path) {
         $res = openssl_get_privatekey($path);
         if (empty($res)) {

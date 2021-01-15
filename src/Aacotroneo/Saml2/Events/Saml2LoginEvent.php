@@ -9,12 +9,14 @@ class Saml2LoginEvent extends Saml2Event {
 
     protected $user;
     protected $auth;
+    protected $idp;
 
     function __construct($idp, Saml2User $user, Saml2Auth $auth)
     {
         parent::__construct($idp);
         $this->user = $user;
         $this->auth = $auth;
+        $this->idp = $idp;
     }
 
     public function getSaml2User()
@@ -25,5 +27,10 @@ class Saml2LoginEvent extends Saml2Event {
     public function getSaml2Auth()
     {
         return $this->auth;
+    }
+
+    public function getSaml2Idp()
+    {
+        return $this->idp;
     }
 }

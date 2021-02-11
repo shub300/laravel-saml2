@@ -48,7 +48,7 @@ class Saml2Controller extends Controller
 
         $redirectUrl = $user->getIntendedUrl();
 
-        if ($redirectUrl !== null) {
+        if (strpos(config('saml2_settings.loginRoute'), '?uid=') == false && $redirectUrl !== null) { // Added ?uid check because loginRoute config variable being updated from Listner also adding uid for login
             return redirect($redirectUrl);
         } else {
 
